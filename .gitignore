@@ -1,0 +1,22 @@
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# Secret environment files
+.env
+.env.*
+
+# Editor settings
+.vscode/
+
+# Temporary and log files
+*.log
+*.tmp
+
+# Local backup folders
+KYRA_BACKUP*/
