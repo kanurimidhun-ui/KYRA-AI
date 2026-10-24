@@ -20,3 +20,7 @@ venv/
 
 # Local backup folders
 KYRA_BACKUP*/
+
+
+# KYRA backup archives
+KYRA-Phase*-Backup.zip
