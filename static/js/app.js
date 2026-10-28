@@ -1,9 +1,9 @@
 
 "use strict";
 
-// KYRA AI - English, Hindi and Telugu Voice Assistant
-// Telugu speech uses the Flask /api/tts Edge TTS endpoint.
-// English and Hindi continue using browser voices.
+// KYRA AI v4.2 — JARVIS Day 9
+// English, Hindi and Telugu Voice Assistant
+// Secure sequential execution for Notepad and Calculator.
 
 const $ = id => document.getElementById(id);
 
@@ -12,7 +12,6 @@ const statusText = $("statusText");
 const commandForm = $("commandForm");
 const commandInput = $("commandInput");
 const consoleLog = $("consoleLog");
-
 const micButton = $("micButton");
 const micButtonText = $("micButtonText");
 const voiceToggle = $("voiceToggle");
@@ -20,7 +19,6 @@ const voiceTest = $("voiceTest");
 const voiceSelect = $("voiceSelect");
 const voiceStatus = $("voiceStatus");
 const voiceModuleState = $("voiceModuleState");
-
 const replyLanguage = $("replyLanguage");
 const voiceAvailability = $("voiceAvailability");
 const aiModuleState = $("aiModuleState");
@@ -58,23 +56,20 @@ let listening = false;
 let recognizedText = "";
 let recognitionFailed = false;
 let repliesEnabled = true;
-
 let availableVoices = [];
 let currentVoiceKey = "auto";
 let activeUtterance = null;
-
 let activeTeluguAudio = null;
 let activeTeluguAudioUrl = null;
 let activeTeluguRequest = null;
 let speechSequence = 0;
-
 let isBusy = false;
 let aiReady = false;
 let conversation = [];
 
-// ---------------------------------------
+// =======================================
 // SAVE USER PREFERENCES
-// ---------------------------------------
+// =======================================
 
 function loadPreference(key, fallback) {
   try {
@@ -102,9 +97,9 @@ function savedVoiceMap() {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // DASHBOARD MESSAGES
-// ---------------------------------------
+// =======================================
 
 function addMessage(sender, text, type = "kyra") {
   if (!consoleLog) return;
@@ -130,9 +125,9 @@ function setVoiceStatus(message, isError = false) {
   voiceStatus.classList.toggle("is-error", isError);
 }
 
-// ---------------------------------------
+// =======================================
 // LIVE CLOCK
-// ---------------------------------------
+// =======================================
 
 function refreshClock() {
   const now = new Date();
@@ -154,9 +149,9 @@ function refreshClock() {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // FLASK BACKEND STATUS
-// ---------------------------------------
+// =======================================
 
 async function checkBackend() {
   try {
@@ -200,9 +195,9 @@ async function checkBackend() {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // OLLAMA AI STATUS
-// ---------------------------------------
+// =======================================
 
 async function checkAI() {
   try {
@@ -238,9 +233,9 @@ async function checkAI() {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // LANGUAGE SELECTION
-// ---------------------------------------
+// =======================================
 
 function configureLanguageSelector() {
   if (
@@ -298,9 +293,9 @@ function setLanguage(next, announce = false) {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // VOICE SELECTION
-// ---------------------------------------
+// =======================================
 
 function voiceKey(voice) {
   return `${voice.voiceURI}|${voice.lang}|${voice.name}`;
@@ -363,7 +358,7 @@ function updateVoiceChoices() {
     )
   );
 
-  // Telugu is available through the Flask backend.
+  // Telugu voice is available through Flask Edge TTS.
   if (language === "te") {
     voiceSelect.add(
       new Option(
@@ -408,25 +403,22 @@ function updateVoiceChoices() {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // STOP SPEECH
-// ---------------------------------------
+// =======================================
 
 function stopSpeech() {
   speechSequence += 1;
 
-  // Stop browser speech.
   if (speaker) {
     speaker.cancel();
   }
 
-  // Stop pending Telugu TTS request.
   if (activeTeluguRequest) {
     activeTeluguRequest.abort();
     activeTeluguRequest = null;
   }
 
-  // Stop Telugu audio playback.
   if (activeTeluguAudio) {
     activeTeluguAudio.pause();
     activeTeluguAudio.removeAttribute("src");
@@ -434,20 +426,18 @@ function stopSpeech() {
     activeTeluguAudio = null;
   }
 
-  // Release the temporary audio URL.
   if (activeTeluguAudioUrl) {
     URL.revokeObjectURL(activeTeluguAudioUrl);
     activeTeluguAudioUrl = null;
   }
 
   activeUtterance = null;
-
   document.body.classList.remove("is-speaking");
 }
 
-// ---------------------------------------
+// =======================================
 // TELUGU EDGE TTS
-// ---------------------------------------
+// =======================================
 
 async function speakTeluguWithEdgeTTS(text, sequence) {
   const controller = new AbortController();
@@ -461,16 +451,13 @@ async function speakTeluguWithEdgeTTS(text, sequence) {
   try {
     const response = await fetch("/api/tts", {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json"
       },
-
       body: JSON.stringify({
         text: String(text).slice(0, 2000),
         language: "te"
       }),
-
       signal: controller.signal
     });
 
@@ -535,7 +522,6 @@ async function speakTeluguWithEdgeTTS(text, sequence) {
         "Speaking Telugu via Edge TTS..."
       );
     }
-
   } catch (err) {
     if (
       sequence !== speechSequence ||
@@ -555,7 +541,6 @@ async function speakTeluguWithEdgeTTS(text, sequence) {
       ". Check internet and browser audio permission.",
       true
     );
-
   } finally {
     if (activeTeluguRequest === controller) {
       activeTeluguRequest = null;
@@ -563,9 +548,9 @@ async function speakTeluguWithEdgeTTS(text, sequence) {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // MAIN TEXT-TO-SPEECH ENGINE
-// ---------------------------------------
+// =======================================
 
 function say(text, force = false) {
   if (!repliesEnabled && !force) {
@@ -576,7 +561,6 @@ function say(text, force = false) {
 
   const sequence = speechSequence;
 
-  // Use Edge TTS automatically for Telugu.
   if (
     language === "te" &&
     (
@@ -588,17 +572,14 @@ function say(text, force = false) {
       text,
       sequence
     );
-
     return;
   }
 
-  // English and Hindi use browser speech.
   if (!speaker) {
     setVoiceStatus(
       "Browser speech is unavailable. Answer shown as text.",
       true
     );
-
     return;
   }
 
@@ -609,7 +590,6 @@ function say(text, force = false) {
       `No ${LANGUAGES[language].label} browser voice installed. Answer shown as text.`,
       true
     );
-
     return;
   }
 
@@ -628,7 +608,6 @@ function say(text, force = false) {
 
   utterance.onend = () => {
     activeUtterance = null;
-
     document.body.classList.remove(
       "is-speaking"
     );
@@ -665,9 +644,9 @@ function kyraReply(text, speak = true) {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // MULTILINGUAL RESPONSES
-// ---------------------------------------
+// =======================================
 
 const MESSAGES = {
   languageChanged: [
@@ -675,91 +654,76 @@ const MESSAGES = {
     "हिंदी मोड चालू है।",
     "తెలుగు మోడ్ ప్రారంభమైంది."
   ],
-
   cleared: [
     "Console cleared. Awaiting your next command.",
     "कंसोल साफ़ हो गया।",
     "కన్సోల్ క్లియర్ అయింది."
   ],
-
   help: [
     "Ask me about time, date, status, jokes, motivation, calculations, or anything using local AI. Say 'speak Hindi' or 'speak Telugu' to change languages.",
     "समय, तारीख, सिस्टम स्थिति, चुटकुले, गणित या कोई भी सवाल पूछें।",
     "సమయం, తేదీ, సిస్టమ్ స్థితి, జోకులు, లెక్కలు లేదా ఏ ప్రశ్నైనా అడగండి."
   ],
-
   hello: [
     "Hello! I'm KYRA. How can I help you?",
     "नमस्ते! मैं कायरा हूँ। आपकी क्या मदद करूँ?",
     "నమస్కారం! నేను కైరా. మీకు ఎలా సహాయం చేయగలను?"
   ],
-
   intro: [
     "I'm KYRA, your JARVIS-inspired voice assistant, built with Python and JavaScript.",
     "मैं कायरा हूँ, पायथन और जावास्क्रिप्ट से बना आपका वॉइस असिस्टेंट।",
-    "నేను కైరా, పైథాన్ మరియు జావాస్క్రిప్ట్‌తో రూపొందించిన మీ వాయిస్ అసిస్టెంట్‌ని."
+    "నేను కైరా, పైథాన్ మరియు జావास्क्रिप్ట్‌తో రూపొందించిన మీ వాయిస్ అసిస్టెంట్‌ని."
   ],
-
   fine: [
     "I'm doing great! My systems are ready.",
     "मैं ठीक हूँ! मेरे सिस्टम तैयार हैं।",
     "నేను బాగున్నాను! నా సిస్టమ్‌లు సిద్ధంగా ఉన్నాయి."
   ],
-
   joke: [
     "Why do programmers prefer dark mode? Because light attracts bugs!",
     "प्रोग्रामर डार्क मोड क्यों पसंद करते हैं? क्योंकि रोशनी में बग आते हैं!",
     "ప్రోగ్రామర్లు డార్క్ మోడ్ ఎందుకు ఇష్టపడతారు? వెలుతురు బగ్‌లను ఆకర్షిస్తుంది కాబట్టి!"
   ],
-
   motivation: [
     "Every expert was once a beginner. Keep learning and building!",
     "हर विशेषज्ञ कभी शुरुआती था। सीखते रहिए और आगे बढ़िए!",
     "ప్రతి నిపుణుడూ ఒకప్పుడు ప్రారంభకుడే. నేర్చుకుంటూ ముందుకు సాగండి!"
   ],
-
   thanks: [
     "You're welcome! Ready for the next mission.",
     "आपका स्वागत है! अगले काम के लिए तैयार हूँ।",
     "పర్వాలేదు! తదుపరి పనికి సిద్ధంగా ఉన్నాను."
   ],
-
   stopped: [
     "Speech stopped.",
     "बोलना बंद कर दिया।",
     "మాట్లాడటం ఆపాను."
   ],
-
   thinking: [
     "Let me think...",
     "मैं सोच रही हूँ...",
     "నేను ఆలోచిస్తున్నాను..."
   ],
-
   offline: [
     "My local AI is not connected. Please check Ollama.",
     "लोकल एआई कनेक्ट नहीं है। ओलामा जाँचें।",
     "లోకల్ ఏఐ కనెక్ట్ కాలేదు. ఒల్లామాను తనిఖీ చేయండి."
   ],
-
   error: [
     "Something went wrong. Please try again.",
     "कुछ गड़बड़ हुई। फिर कोशिश करें।",
     "ఏదో సమస్య వచ్చింది. మళ్లీ ప్రయత్నించండి."
   ],
-
   online: [
     "All systems operational. KYRA is online.",
     "सभी सिस्टम ठीक हैं। कायरा ऑनलाइन है।",
     "అన్ని సిస్టమ్‌లు సరిగ్గా పనిచేస్తున్నాయి. కైరా ఆన్‌లైన్‌లో ఉంది."
   ],
-
   backendOffline: [
     "The Flask backend is offline.",
     "फ्लास्क बैकएंड ऑफ़लाइन है।",
     "ఫ్లాస్క్ బ్యాకెండ్ ఆఫ్‌లైన్‌లో ఉంది."
   ],
-
   test: [
     "Hello! I'm KYRA. My English voice is ready.",
     "नमस्ते! मैं कायरा हूँ। मेरी हिंदी आवाज़ तैयार है।",
@@ -792,9 +756,9 @@ function localizedNumberAnswer(value) {
   return `The answer is ${value}.`;
 }
 
-// ---------------------------------------
+// =======================================
 // COMMAND PROCESSING
-// ---------------------------------------
+// =======================================
 
 function normalizeCommand(command) {
   return String(command)
@@ -835,9 +799,7 @@ function smallMath(input) {
   }
 
   if (
-    ["times", "multiplied by", "*", "x"].includes(
-      operator
-    )
+    ["times", "multiplied by", "*", "x"].includes(operator)
   ) {
     return a * b;
   }
@@ -851,9 +813,9 @@ function smallMath(input) {
   return a / b;
 }
 
-// ---------------------------------------
-// LOCAL OLLAMA AI
-// ---------------------------------------
+// =======================================
+// LOCAL OLLAMA AI + DAY 9 JARVIS EXECUTION
+// =======================================
 
 async function askLocalAI(command) {
   if (!aiReady) {
@@ -868,19 +830,19 @@ async function askLocalAI(command) {
     "Use no Italian. Reply in the selected language regardless of the question's language. " +
     `Keep the answer clear and concise.\nUSER QUESTION: ${command}`;
 
+  const payload = {
+    question: languageRule,
+    language: language,
+    history: conversation
+  };
+
   try {
     const response = await fetch("/api/ask", {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json"
       },
-
-      body: JSON.stringify({
-        question: languageRule,
-        language: language,
-        history: conversation
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
@@ -891,10 +853,247 @@ async function askLocalAI(command) {
       );
     }
 
+    // =======================================
+    // DAY 9: SECURE SEQUENTIAL EXECUTION
+    // =======================================
+    // Only Notepad and Calculator are allowed
+    // in this first version.
+    //
+    // Each step gets its own server-issued,
+    // single-use confirmation token.
+    //
+    // The browser cannot bypass Flask's
+    // existing action authorization.
+
+    if (data.status === "plan_ready") {
+      const steps = data.steps;
+
+      const allowedAppCommand = /^open .+$/i;
+
+      if (
+        !Array.isArray(steps) ||
+        steps.length < 2 ||
+        steps.length > 3 ||
+        !steps.every(step =>
+          step &&
+          typeof step.command === "string" &&
+          allowedAppCommand.test(
+            step.command.trim()
+          ) &&
+          step.requires_confirmation === true
+        )
+      ) {
+        kyraReply(
+          "KYRA prepared a plan, but automatic execution is currently limited to opening Notepad and Calculator. No actions were executed."
+        );
+        return;
+      }
+
+      kyraReply(
+        "KYRA has prepared the plan. Each step will ask for separate approval.",
+        false
+      );
+
+      const completed = [];
+
+      for (
+        let index = 0;
+        index < steps.length;
+        index++
+      ) {
+        const stepCommand =
+          steps[index].command.trim();
+
+        const stepPayload = {
+          question: stepCommand,
+          language: language,
+          history: conversation
+        };
+
+        // Request a confirmation token for
+        // this exact command from Flask.
+
+        const stepResponse = await fetch(
+          "/api/ask",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(stepPayload)
+          }
+        );
+
+        const stepData =
+          await stepResponse.json();
+
+        if (
+          !stepResponse.ok ||
+          stepData.status !==
+            "confirmation_required" ||
+          typeof stepData.confirmation_token !==
+            "string" ||
+          !stepData.confirmation_token
+        ) {
+          kyraReply(
+            `Plan stopped at Step ${index + 1}: confirmation could not be requested. No further steps were executed.`
+          );
+          return;
+        }
+
+        const approved = window.confirm(
+          `KYRA JARVIS — Step ${index + 1} of ${steps.length}\n\n` +
+          `${stepCommand}\n\n` +
+          "OK = Approve this step; Cancel = Stop the plan"
+        );
+
+        // Submit approval OR cancellation
+        // so the server consumes and audits
+        // the one-time confirmation token.
+
+        const confirmResponse = await fetch(
+          "/api/ask",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              ...stepPayload,
+              confirmation_token:
+                stepData.confirmation_token,
+              confirmation: approved
+            })
+          }
+        );
+
+        const result =
+          await confirmResponse.json();
+
+        // Stop if the user cancelled.
+        if (!approved) {
+          if (
+            confirmResponse.ok &&
+            result.status === "cancelled"
+          ) {
+            kyraReply(
+              `Plan cancelled at Step ${index + 1}. Remaining steps were not executed.`
+            );
+          } else {
+            kyraReply(
+              `Plan stopped at Step ${index + 1}. Cancellation could not be confirmed by the server.`
+            );
+          }
+          return;
+        }
+
+        // Stop if Flask did not report a
+        // successful application launch.
+        if (
+          !confirmResponse.ok ||
+          result.status !== "success" ||
+          result.automation !== true ||
+          result.action !== "open_application"
+        ) {
+          kyraReply(
+            `Plan stopped at Step ${index + 1}: ` +
+            (
+              result.error ||
+              result.reply ||
+              "The action did not succeed."
+            )
+          );
+          return;
+        }
+
+        completed.push(stepCommand);
+      }
+
+      // All steps succeeded.
+      const finalAnswer =
+        "JARVIS plan completed successfully!\n" +
+        completed.map(
+          (item, index) =>
+            `Step ${index + 1}: ${item} — Success`
+        ).join("\n");
+
+      conversation.push(
+        {
+          role: "user",
+          content: command
+        },
+        {
+          role: "assistant",
+          content: finalAnswer
+        }
+      );
+
+      conversation =
+        conversation.slice(-6);
+
+      kyraReply(finalAnswer);
+      return;
+    }
+
+    // =======================================
+    // EXISTING SINGLE-ACTION CONFIRMATION
+    // =======================================
+
+    let result = data;
+
+    if (
+      data.status === "confirmation_required"
+    ) {
+      if (
+        typeof data.confirmation_token !==
+        "string"
+      ) {
+        throw new Error(
+          "Missing action confirmation token"
+        );
+      }
+
+      const promptText =
+        language === "te"
+          ? "KYRA ఈ చర్యను అమలు చేయాలా?\n" +
+            command +
+            "\nOK = నిర్ధారించు; Cancel = రద్దు"
+          : "Allow KYRA to perform this action?\n" +
+            command +
+            "\nOK = Confirm; Cancel = Cancel";
+
+      const approved =
+        window.confirm(promptText);
+
+      const confirmationResponse =
+        await fetch("/api/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            ...payload,
+            confirmation_token:
+              data.confirmation_token,
+            confirmation: approved
+          })
+        });
+
+      result =
+        await confirmationResponse.json();
+
+      if (!confirmationResponse.ok) {
+        throw new Error(
+          result.error ||
+          "Action confirmation failed"
+        );
+      }
+    }
+
     const answer =
-      data.reply ||
-      data.answer ||
-      data.response;
+      result.reply ||
+      result.answer ||
+      result.response;
 
     if (
       typeof answer !== "string" ||
@@ -914,7 +1113,8 @@ async function askLocalAI(command) {
       }
     );
 
-    conversation = conversation.slice(-6);
+    conversation =
+      conversation.slice(-6);
 
     kyraReply(answer);
 
@@ -928,16 +1128,18 @@ async function askLocalAI(command) {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // MAIN KYRA COMMAND ENGINE
-// ---------------------------------------
+// =======================================
 
 async function executeCommand(rawCommand) {
-  const command = String(rawCommand || "").trim();
+  const command =
+    String(rawCommand || "").trim();
 
   if (!command || isBusy) return;
 
-  const normalized = normalizeCommand(command);
+  const normalized =
+    normalizeCommand(command);
 
   if (
     matchesAny(normalized, [
@@ -1013,7 +1215,9 @@ async function executeCommand(rawCommand) {
 
       kyraReply(
         localText(
-          online ? "online" : "backendOffline"
+          online
+            ? "online"
+            : "backendOffline"
         )
       );
 
@@ -1027,9 +1231,10 @@ async function executeCommand(rawCommand) {
         /current time/
       ])
     ) {
-      const value = new Date().toLocaleTimeString(
-        LANGUAGES[language].locale
-      );
+      const value =
+        new Date().toLocaleTimeString(
+          LANGUAGES[language].locale
+        );
 
       const message =
         language === "hi"
@@ -1050,10 +1255,11 @@ async function executeCommand(rawCommand) {
         /what day is it/
       ])
     ) {
-      const value = new Date().toLocaleDateString(
-        LANGUAGES[language].locale,
-        { dateStyle: "full" }
-      );
+      const value =
+        new Date().toLocaleDateString(
+          LANGUAGES[language].locale,
+          { dateStyle: "full" }
+        );
 
       const message =
         language === "hi"
@@ -1135,17 +1341,23 @@ async function executeCommand(rawCommand) {
       ])
     ) {
       stopSpeech();
-      kyraReply(localText("stopped"), false);
+
+      kyraReply(
+        localText("stopped"),
+        false
+      );
 
     // CALCULATIONS
-    } else if (smallMath(normalized) !== null) {
+    } else if (
+      smallMath(normalized) !== null
+    ) {
       kyraReply(
         localizedNumberAnswer(
           smallMath(normalized)
         )
       );
 
-    // AI QUESTIONS
+    // AI QUESTIONS AND ACTIONS
     } else {
       await askLocalAI(command);
     }
@@ -1163,9 +1375,9 @@ async function executeCommand(rawCommand) {
   }
 }
 
-// ---------------------------------------
+// =======================================
 // MICROPHONE STATUS
-// ---------------------------------------
+// =======================================
 
 function setListening(active) {
   listening = active;
@@ -1183,7 +1395,9 @@ function setListening(active) {
 
     micButton.setAttribute(
       "aria-label",
-      active ? "Stop microphone" : "Start microphone"
+      active
+        ? "Stop microphone"
+        : "Start microphone"
     );
   }
 
@@ -1201,23 +1415,31 @@ function setListening(active) {
 
 function microphoneErrorMessage(error) {
   const messages = {
-    "not-allowed": "Microphone permission denied.",
-    "service-not-allowed": "Speech recognition is blocked.",
-    "audio-capture": "No microphone detected.",
-    "network": "Speech recognition needs network access.",
-    "no-speech": "No speech detected. Try again.",
+    "not-allowed":
+      "Microphone permission denied.",
+    "service-not-allowed":
+      "Speech recognition is blocked.",
+    "audio-capture":
+      "No microphone detected.",
+    "network":
+      "Speech recognition needs network access.",
+    "no-speech":
+      "No speech detected. Try again.",
     "language-not-supported":
       `${LANGUAGES[language].label} recognition is not supported in this browser.`,
-    "aborted": "Listening stopped."
+    "aborted":
+      "Listening stopped."
   };
 
-  return messages[error] ||
-    `Microphone error: ${error}.`;
+  return (
+    messages[error] ||
+    `Microphone error: ${error}.`
+  );
 }
 
-// ---------------------------------------
+// =======================================
 // SPEECH RECOGNITION
-// ---------------------------------------
+// =======================================
 
 function initializeRecognition() {
   if (!SpeechRecognitionClass) {
@@ -1226,7 +1448,8 @@ function initializeRecognition() {
     }
 
     if (voiceModuleState) {
-      voiceModuleState.textContent = "LIMITED";
+      voiceModuleState.textContent =
+        "LIMITED";
     }
 
     setVoiceStatus(
@@ -1237,9 +1460,12 @@ function initializeRecognition() {
     return;
   }
 
-  recognition = new SpeechRecognitionClass();
+  recognition =
+    new SpeechRecognitionClass();
 
-  recognition.lang = LANGUAGES[language].locale;
+  recognition.lang =
+    LANGUAGES[language].locale;
+
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
@@ -1256,7 +1482,8 @@ function initializeRecognition() {
     const result = event.results[0];
 
     if (result && result[0]) {
-      recognizedText = result[0].transcript.trim();
+      recognizedText =
+        result[0].transcript.trim();
 
       setVoiceStatus(
         `Heard: ${recognizedText}`
@@ -1268,7 +1495,9 @@ function initializeRecognition() {
     recognitionFailed = true;
 
     setVoiceStatus(
-      microphoneErrorMessage(event.error),
+      microphoneErrorMessage(
+        event.error
+      ),
       event.error !== "aborted"
     );
   };
@@ -1298,127 +1527,148 @@ function initializeRecognition() {
   );
 }
 
-// ---------------------------------------
+// =======================================
 // MICROPHONE BUTTON
-// ---------------------------------------
+// =======================================
 
 if (micButton) {
-  micButton.addEventListener("click", () => {
-    if (!recognition) return;
+  micButton.addEventListener(
+    "click",
+    () => {
+      if (!recognition) return;
 
-    if (listening) {
-      recognition.stop();
-      return;
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+
+      recognizedText = "";
+      recognitionFailed = false;
+
+      stopSpeech();
+
+      try {
+        recognition.start();
+
+        setVoiceStatus(
+          "Microphone starting..."
+        );
+      } catch {
+        setVoiceStatus(
+          "Microphone busy. Try again.",
+          true
+        );
+      }
     }
-
-    recognizedText = "";
-    recognitionFailed = false;
-
-    stopSpeech();
-
-    try {
-      recognition.start();
-
-      setVoiceStatus(
-        "Microphone starting..."
-      );
-
-    } catch {
-      setVoiceStatus(
-        "Microphone busy. Try again.",
-        true
-      );
-    }
-  });
+  );
 }
 
-// ---------------------------------------
+// =======================================
 // VOICE ON / OFF
-// ---------------------------------------
+// =======================================
 
 if (voiceToggle) {
-  voiceToggle.addEventListener("click", () => {
-    repliesEnabled = !repliesEnabled;
+  voiceToggle.addEventListener(
+    "click",
+    () => {
+      repliesEnabled =
+        !repliesEnabled;
 
-    voiceToggle.setAttribute(
-      "aria-pressed",
-      String(repliesEnabled)
-    );
+      voiceToggle.setAttribute(
+        "aria-pressed",
+        String(repliesEnabled)
+      );
 
-    voiceToggle.textContent = repliesEnabled
-      ? "🔊 REPLIES ON"
-      : "🔇 REPLIES OFF";
+      voiceToggle.textContent =
+        repliesEnabled
+          ? "🔊 REPLIES ON"
+          : "🔇 REPLIES OFF";
 
-    if (!repliesEnabled) {
-      stopSpeech();
+      if (!repliesEnabled) {
+        stopSpeech();
+      }
     }
-  });
+  );
 }
 
-// ---------------------------------------
+// =======================================
 // TEST VOICE BUTTON
-// ---------------------------------------
+// =======================================
 
 if (voiceTest) {
-  voiceTest.addEventListener("click", () => {
-    say(localText("test"), true);
-
-    if (language !== "te") {
-      const selectedVoice = chooseVoice();
-
-      setVoiceStatus(
-        selectedVoice
-          ? `Selected voice: ${selectedVoice.name}`
-          : `No ${LANGUAGES[language].label} speech voice installed.`,
-        !selectedVoice
+  voiceTest.addEventListener(
+    "click",
+    () => {
+      say(
+        localText("test"),
+        true
       );
+
+      if (language !== "te") {
+        const selectedVoice =
+          chooseVoice();
+
+        setVoiceStatus(
+          selectedVoice
+            ? `Selected voice: ${selectedVoice.name}`
+            : `No ${LANGUAGES[language].label} speech voice installed.`,
+          !selectedVoice
+        );
+      }
     }
-  });
+  );
 }
 
-// ---------------------------------------
+// =======================================
 // VOICE DROPDOWN
-// ---------------------------------------
+// =======================================
 
 if (voiceSelect) {
-  voiceSelect.addEventListener("change", () => {
-    currentVoiceKey = voiceSelect.value;
+  voiceSelect.addEventListener(
+    "change",
+    () => {
+      currentVoiceKey =
+        voiceSelect.value;
 
-    const preferences = savedVoiceMap();
-    preferences[language] = currentVoiceKey;
+      const preferences =
+        savedVoiceMap();
 
-    savePreference(
-      STORAGE_VOICES,
-      JSON.stringify(preferences)
-    );
+      preferences[language] =
+        currentVoiceKey;
 
-    if (
-      language === "te" &&
-      (
-        currentVoiceKey === "auto" ||
-        currentVoiceKey === "edge-tts-te"
-      )
-    ) {
-      setVoiceStatus(
-        "Telugu Edge TTS selected (internet required)."
+      savePreference(
+        STORAGE_VOICES,
+        JSON.stringify(preferences)
       );
 
-    } else {
-      const selectedVoice = chooseVoice();
+      if (
+        language === "te" &&
+        (
+          currentVoiceKey === "auto" ||
+          currentVoiceKey === "edge-tts-te"
+        )
+      ) {
+        setVoiceStatus(
+          "Telugu Edge TTS selected (internet required)."
+        );
+      } else {
+        const selectedVoice =
+          chooseVoice();
 
-      setVoiceStatus(
-        selectedVoice
-          ? `Selected: ${selectedVoice.name}`
-          : "No matching voice available.",
-        !selectedVoice
-      );
+        setVoiceStatus(
+          selectedVoice
+            ? `Selected: ${selectedVoice.name}`
+            : "No matching voice available.",
+          !selectedVoice
+        );
+      }
     }
-  });
+  );
 }
 
-// ---------------------------------------
+// =======================================
 // TEXT COMMAND FORM
-// ---------------------------------------
+// =======================================
 
 if (commandForm) {
   commandForm.addEventListener(
@@ -1428,32 +1678,38 @@ if (commandForm) {
 
       if (!commandInput) return;
 
-      const command = commandInput.value;
+      const command =
+        commandInput.value;
+
       commandInput.value = "";
 
       await executeCommand(command);
+
       commandInput.focus();
     }
   );
 }
 
-// ---------------------------------------
+// =======================================
 // QUICK COMMAND BUTTONS
-// ---------------------------------------
+// =======================================
 
 document
   .querySelectorAll("[data-command]")
   .forEach(button => {
-    button.addEventListener("click", () => {
-      void executeCommand(
-        button.dataset.command
-      );
-    });
+    button.addEventListener(
+      "click",
+      () => {
+        void executeCommand(
+          button.dataset.command
+        );
+      }
+    );
   });
 
-// ---------------------------------------
+// =======================================
 // INITIALIZE KYRA
-// ---------------------------------------
+// =======================================
 
 configureLanguageSelector();
 
@@ -1461,7 +1717,8 @@ updateVoiceChoices();
 
 if (
   speaker &&
-  typeof speaker.addEventListener === "function"
+  typeof speaker.addEventListener ===
+    "function"
 ) {
   speaker.addEventListener(
     "voiceschanged",
@@ -1479,5 +1736,5 @@ void checkBackend();
 void checkAI();
 
 console.log(
-  "KYRA multilingual voice engine loaded: English / Hindi / Telugu (Edge TTS)."
+  "KYRA AI v4.2 JARVIS Day 9 loaded: English / Hindi / Telugu + secure sequential execution."
 );

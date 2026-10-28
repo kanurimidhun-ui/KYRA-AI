@@ -1,620 +1,251 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>KYRA AI | Personal Voice Assistant</title>
-
-  <link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/style.css') }}"
-  >
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #070c18;
-      color: #edf6ff;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    .kyra-layout {
-      width: min(1150px, 94%);
-      margin: 0 auto;
-      padding: 24px 0 40px;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 18px;
-      padding-bottom: 22px;
-      border-bottom: 1px solid #26334b;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-icon {
-      width: 48px;
-      height: 48px;
-      display: grid;
-      place-items: center;
-      border: 1px solid #22d3ee;
-      border-radius: 50%;
-      color: #22d3ee;
-      font-size: 23px;
-      box-shadow: 0 0 20px #22d3ee33;
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-size: 28px;
-      letter-spacing: 5px;
-    }
-
-    .subtitle {
-      margin: 6px 0 0;
-      color: #94a8c3;
-      font-size: 12px;
-      letter-spacing: 2px;
-    }
-
-    .status-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #a7f3d0;
-      font-size: 12px;
-      letter-spacing: 1px;
-    }
-
-    .status-dot {
-      width: 9px;
-      height: 9px;
-      background: #34d399;
-      border-radius: 50%;
-      box-shadow: 0 0 12px #34d399;
-    }
-
-    .status-dot--offline {
-      background: #fb7185;
-      box-shadow: 0 0 12px #fb7185;
-    }
-
-    .hero {
-      text-align: center;
-      padding: 34px 0 26px;
-    }
-
-    .orb {
-      width: 156px;
-      height: 156px;
-      margin: 0 auto 22px;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      border: 2px solid #22d3ee;
-      background:
-        radial-gradient(circle, #164e63 0%, #071525 65%);
-      box-shadow:
-        0 0 35px #22d3ee55,
-        inset 0 0 32px #22d3ee44;
-      transition: transform 0.3s, box-shadow 0.3s;
-    }
-
-    .orb span {
-      color: #67e8f9;
-      font-size: 50px;
-      font-weight: bold;
-    }
-
-    body.is-listening .orb {
-      box-shadow: 0 0 65px #22d3ee;
-      animation: pulse 1.2s infinite;
-    }
-
-    body.is-speaking .orb {
-      box-shadow: 0 0 60px #a78bfa;
-    }
-
-    @keyframes pulse {
-      50% {
-        transform: scale(1.07);
-      }
-    }
-
-    .hero h2 {
-      margin: 0 0 10px;
-      font-size: 23px;
-    }
-
-    .hero p {
-      margin: 0;
-      color: #9db1cc;
-      font-size: 14px;
-    }
-
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .panel {
-      min-width: 0;
-      padding: 22px;
-      background: #101a2d;
-      border: 1px solid #273b56;
-      border-radius: 15px;
-    }
-
-    .panel h3 {
-      margin: 0 0 18px;
-      color: #67e8f9;
-      font-size: 14px;
-      letter-spacing: 2px;
-    }
-
-    .panel--wide {
-      grid-column: 1 / -1;
-    }
-
-    .clock {
-      font-size: 34px;
-      font-weight: bold;
-      margin: 8px 0;
-    }
-
-    .date {
-      color: #9db1cc;
-      font-size: 14px;
-    }
-
-    .module-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 12px 0;
-      border-bottom: 1px solid #26334b;
-      font-size: 13px;
-    }
-
-    .module-state {
-      color: #34d399;
-    }
-
-    .module-state--later {
-      color: #fbbf24;
-    }
-
-    button,
-    select,
-    input {
-      font: inherit;
-    }
-
-    button {
-      padding: 12px 16px;
-      color: #e5faff;
-      background: #16314a;
-      border: 1px solid #2b647e;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: #205070;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .primary-button {
-      background: #0891b2;
-      border-color: #22d3ee;
-      color: white;
-      font-weight: bold;
-    }
-
-    .voice-buttons {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    #micButton.is-listening {
-      background: #be123c;
-      border-color: #fb7185;
-    }
-
-    .field-label {
-      display: block;
-      margin: 12px 0 8px;
-      color: #9db1cc;
-      font-size: 12px;
-    }
-
-    select,
-    .command-input {
-      width: 100%;
-      padding: 13px;
-      background: #071322;
-      color: white;
-      border: 1px solid #36506c;
-      border-radius: 8px;
-      outline: none;
-    }
-
-    select:focus,
-    .command-input:focus {
-      border-color: #22d3ee;
-    }
-
-    .voice-status {
-      margin-top: 15px;
-      color: #67e8f9;
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .is-error {
-      color: #fb7185 !important;
-    }
-
-    .command-form {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .command-form input {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .quick-commands {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .quick-commands button {
-      padding: 9px 12px;
-      font-size: 12px;
-    }
-
-    .console-log {
-      height: 270px;
-      overflow-y: auto;
-      padding: 15px;
-      background: #050d1a;
-      border: 1px solid #263b53;
-      border-radius: 10px;
-    }
-
-    .message {
-      padding: 12px;
-      margin-bottom: 10px;
-      background: #10253b;
-      border-left: 3px solid #22d3ee;
-      border-radius: 6px;
-    }
-
-    .message--user {
-      background: #1a2039;
-      border-left-color: #a78bfa;
-    }
-
-    .message span {
-      display: block;
-      margin-bottom: 7px;
-      color: #67e8f9;
-      font-size: 11px;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-
-    .message p {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-    }
-
-    .footer {
-      padding-top: 28px;
-      text-align: center;
-      color: #64748b;
-      font-size: 11px;
-      letter-spacing: 2px;
-    }
-
-    @media (max-width: 700px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-
-      .panel--wide {
-        grid-column: auto;
-      }
-
-      .command-form {
-        flex-direction: column;
-      }
-
-      .clock {
-        font-size: 28px;
-      }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#05090d">
+  <meta name="description" content="KYRA AI — personal local AI assistant, voice, automation and threat analysis dashboard.">
+  <title>KYRA AI // Cyberpunk Command Center</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/threat-analysis.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/reference-dashboard.css') }}">
 </head>
 
-<body>
-
-  <div class="kyra-layout">
-
-    <!-- HEADER -->
-    <header class="topbar">
-
-      <div class="brand">
-        <div class="brand-icon">K</div>
-
-        <div>
-          <h1>KYRA</h1>
-          <p class="subtitle">PERSONAL VOICE ASSISTANT</p>
-        </div>
-      </div>
-
-      <div class="status-box">
-        <span id="statusDot" class="status-dot"></span>
-        <span id="statusText">CONNECTING...</span>
-      </div>
-
-    </header>
-
-    <!-- CENTRAL AI ORB -->
-    <section class="hero">
-
-      <div class="orb">
-        <span>K</span>
-      </div>
-
-      <h2>KYRA AI SYSTEM</h2>
-
-      <p>
-        Your intelligent voice-controlled desktop assistant
-      </p>
-
-    </section>
-
-    <!-- DASHBOARD -->
-    <main class="dashboard">
-
-      <!-- SYSTEM CLOCK -->
-      <section class="panel">
-
-        <h3>SYSTEM CLOCK</h3>
-
-        <div id="liveClock" class="clock">
-          --:--:--
-        </div>
-
-        <div id="liveDate" class="date">
-          Loading date...
-        </div>
-
-      </section>
-
-      <!-- SYSTEM MODULES -->
-      <section class="panel">
-
-        <h3>SYSTEM MODULES</h3>
-
-        <div class="module-row">
-          <span>KYRA CORE</span>
-          <span class="module-state">ACTIVE</span>
-        </div>
-
-        <div class="module-row">
-          <span>VOICE ENGINE</span>
-          <span id="voiceModuleState" class="module-state">
-            READY
-          </span>
-        </div>
-
-        <div class="module-row">
-          <span>LOCAL AI MODEL</span>
-          <span
-            id="aiModuleState"
-            class="module-state module-state--later"
-          >
-            OPTIONAL
-          </span>
-        </div>
-
-      </section>
-
-      <!-- VOICE CONTROLS -->
-      <section class="panel panel--wide">
-
-        <h3>VOICE CONTROL CENTER</h3>
-
-        <div class="voice-buttons">
-
-          <button
-            type="button"
-            id="micButton"
-            class="primary-button"
-            aria-pressed="false"
-          >
-            🎙 <span id="micButtonText">START MIC</span>
-          </button>
-
-          <button
-            type="button"
-            id="voiceToggle"
-            aria-pressed="true"
-          >
-            🔊 REPLIES ON
-          </button>
-
-          <button type="button" id="voiceTest">
-            TEST VOICE
-          </button>
-
-        </div>
-
-        <label class="field-label" for="voiceSelect">
-          SELECT KYRA VOICE
-        </label>
-
-        <select id="voiceSelect">
-          <option value="auto-it">
-            Prefer Italian feminine voice
-          </option>
-        </select>
-
-        <label class="field-label" for="replyLanguage">
-          REPLY LANGUAGE
-        </label>
-
-        <select id="replyLanguage">
-          <option value="en">English</option>
-          <option value="it">Italian</option>
-        </select>
-
-        <div id="voiceAvailability" class="voice-status">
-          Loading available voices...
-        </div>
-
-        <div
-          id="voiceStatus"
-          class="voice-status"
-          aria-live="polite"
-        >
-          Initializing microphone...
-        </div>
-
-      </section>
-
-      <!-- COMMAND TERMINAL -->
-      <section class="panel panel--wide">
-
-        <h3>KYRA COMMAND TERMINAL</h3>
-
-        <!-- REQUIRED FORM: FIXES COMMAND INPUT -->
-        <form id="commandForm" class="command-form">
-
-          <input
-            type="text"
-            id="commandInput"
-            class="command-input"
-            placeholder="Ask KYRA anything or type a command..."
-            autocomplete="off"
-            aria-label="Enter KYRA command"
-            required
-          >
-
-          <button
-            type="submit"
-            class="primary-button"
-          >
-            EXECUTE
-          </button>
-
-        </form>
-
-        <!-- QUICK COMMANDS -->
-        <div class="quick-commands">
-
-          <button type="button" data-command="hello">
-            HELLO
-          </button>
-
-          <button type="button" data-command="status">
-            STATUS
-          </button>
-
-          <button type="button" data-command="time">
-            TIME
-          </button>
-
-          <button type="button" data-command="date">
-            DATE
-          </button>
-
-          <button type="button" data-command="tell me a joke">
-            JOKE
-          </button>
-
-          <button type="button" data-command="motivate me">
-            MOTIVATE
-          </button>
-
-          <button type="button" data-command="calculate 12 plus 8">
-            CALCULATE
-          </button>
-
-          <button type="button" data-command="help">
-            HELP
-          </button>
-
-          <button type="button" data-command="clear console">
-            CLEAR
-          </button>
-
-        </div>
-
-        <!-- KYRA OUTPUT -->
-        <div
-          id="consoleLog"
-          class="console-log"
-          role="log"
-          aria-label="KYRA conversation"
-          aria-live="polite"
-        >
-          <div class="message">
-            <span>KYRA</span>
-            <p>
-              KYRA command terminal initialized.
-              Ready for your instructions.
-            </p>
-          </div>
-        </div>
-
-      </section>
-
-    </main>
-
-    <footer class="footer">
-      KYRA AI • PERSONAL ASSISTANT • SYSTEM READY
-    </footer>
-
+<body class="kyra-reference-mode">
+  <div id="referenceScreen" class="reference-screen" aria-label="KYRA dashboard reference layout">
+    <img class="reference-screen-image" src="{{ url_for('static', filename='images/kyra-reference-screen.png') }}" alt="KYRA cyberpunk dashboard reference artwork" draggable="false">
+    <div class="reference-hotspots" aria-label="Interactive KYRA dashboard controls">
+      <button class="reference-hotspot" style="left:.5%;top:14.8%;width:15%;height:6.2%" data-ref-action="home" aria-label="Home"></button>
+      <button class="reference-hotspot" style="left:.5%;top:21.2%;width:15%;height:5.5%" data-ref-action="threat" aria-label="Security and threat analysis"></button>
+      <button class="reference-hotspot" style="left:.5%;top:26.8%;width:15%;height:5.6%" data-ref-action="core" aria-label="KYRA Core"></button>
+      <button class="reference-hotspot" style="left:.5%;top:32.4%;width:15%;height:5.8%" data-ref-action="forensics" aria-label="Forensics"></button>
+      <button class="reference-hotspot" style="left:.5%;top:38.2%;width:15%;height:5.7%" data-ref-action="threatintel" aria-label="Threat Intelligence"></button>
+      <button class="reference-hotspot" style="left:.5%;top:43.9%;width:15%;height:5.8%" data-ref-action="system" aria-label="System Control"></button>
+      <button class="reference-hotspot" style="left:.5%;top:49.7%;width:15%;height:5.8%" data-ref-action="memory" aria-label="Memory and notes"></button>
+      <button class="reference-hotspot" style="left:.5%;top:55.5%;width:15%;height:7.1%" data-ref-action="settings" aria-label="Settings"></button>
+      <button class="reference-hotspot" style="left:16.4%;top:44.7%;width:41.8%;height:8.5%" data-ref-action="voice" aria-label="Talk to KYRA"></button>
+      <button class="reference-hotspot" style="left:59.5%;top:26.2%;width:17.4%;height:26.6%" data-ref-action="corestatus" aria-label="KYRA online status"></button>
+      <button class="reference-hotspot" style="left:77%;top:14.5%;width:22%;height:38%" data-ref-action="systemstatus" aria-label="System overview"></button>
+      <button class="reference-hotspot" style="left:16%;top:54.2%;width:31.4%;height:22.2%" data-ref-action="threatintel" aria-label="Threat intelligence panel"></button>
+      <button class="reference-hotspot" style="left:47.7%;top:54.2%;width:29%;height:22.2%" data-ref-action="chat" aria-label="AI Assistant panel"></button>
+      <button class="reference-hotspot" style="left:77.1%;top:57.2%;width:6.2%;height:8.1%" data-ref-action="terminal" aria-label="Open Terminal helper"></button>
+      <button class="reference-hotspot" style="left:83.9%;top:57.2%;width:6.2%;height:8.1%" data-ref-action="scan" aria-label="Scan System"></button>
+      <button class="reference-hotspot" style="left:91%;top:57.2%;width:6.2%;height:8.1%" data-ref-action="analyzefile" aria-label="Analyze File"></button>
+      <button class="reference-hotspot" style="left:77.1%;top:66%;width:6.2%;height:8.5%" data-ref-action="logs" aria-label="View Logs"></button>
+      <button class="reference-hotspot" style="left:83.9%;top:66%;width:6.2%;height:8.5%" data-ref-action="network" aria-label="Network Monitor"></button>
+      <button class="reference-hotspot" style="left:91%;top:66%;width:6.2%;height:8.5%" data-ref-action="settings" aria-label="Quick Settings"></button>
+      <button class="reference-hotspot" style="left:16%;top:77.1%;width:14.3%;height:19.5%" data-ref-action="files" aria-label="Recent files"></button>
+      <button class="reference-hotspot" style="left:30.4%;top:77.1%;width:31.2%;height:19.5%" data-ref-action="core" aria-label="KYRA Core panel"></button>
+      <button class="reference-hotspot" style="left:61.8%;top:77.1%;width:20.3%;height:19.5%" data-ref-action="goals" aria-label="Daily goals"></button>
+      <button class="reference-hotspot" style="left:82.4%;top:77.1%;width:16.8%;height:19.5%" data-ref-action="focus" aria-label="Today's focus"></button>
+      <button class="reference-hotspot reference-profile-hotspot" style="left:78.7%;top:1.2%;width:20.2%;height:10.4%" data-ref-action="systemstatus" aria-label="KYRA profile and status"></button>
+    </div>
+    <div id="referenceToast" class="reference-toast" role="status" aria-live="polite"></div>
   </div>
 
-  <!-- EXISTING KYRA JAVASCRIPT -->
-  <script
-    src="{{ url_for('static', filename='js/app.js') }}"
-    defer
-  ></script>
+  <div id="referenceModal" class="reference-modal" hidden>
+    <div class="reference-modal-backdrop" data-ref-close="1"></div>
+    <section class="reference-modal-card" role="dialog" aria-modal="true" aria-labelledby="referenceModalTitle">
+      <header class="reference-modal-header"><div><span class="reference-modal-eyebrow">KYRA // COMMAND CENTER</span><h2 id="referenceModalTitle">KYRA</h2></div><button type="button" class="reference-modal-close" data-ref-close="1" aria-label="Close dialog">×</button></header>
+      <div id="referenceModalBody" class="reference-modal-body"></div>
+    </section>
+  </div>
 
+  <div id="kyraFunctionalSource" aria-hidden="true">
+    <div class="ambient ambient--orange" aria-hidden="true"></div>
+  <div class="ambient ambient--cyan" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <main class="dashboard-grid" id="home">
+    <aside class="sidebar">
+      <a class="brand" href="#home" aria-label="KYRA dashboard home" data-jump="#home">
+        <span class="brand-mark" aria-hidden="true"><span>ϟ</span></span>
+        <span class="brand-copy"><strong>KYRA</strong><small>AI ASSISTANT</small></span>
+      </a>
+
+      <nav class="nav-card" aria-label="Main navigation">
+        <button class="nav-item is-active" type="button" data-jump="#home"><span class="nav-icon">⌂</span><span><strong>HOME</strong><small>Your mission center</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-jump="#threatAnalysisPanel"><span class="nav-icon">⛨</span><span><strong>SECURITY</strong><small>Threats · Monitoring · AI</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-jump="#kyraCorePanel"><span class="nav-icon">✧</span><span><strong>KYRA CORE</strong><small>AI Engine · Learning · Adapt</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-command="Show me the available KYRA security features"><span class="nav-icon">⌕</span><span><strong>FORENSICS</strong><small>Logs · Analysis · Evidence</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-jump="#threatIntelPanel"><span class="nav-icon">⚠</span><span><strong>THREAT INTEL</strong><small>Risk assessment</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-command="System info"><span class="nav-icon">⚙</span><span><strong>SYSTEM CONTROL</strong><small>Devices · Network · Local</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-command="What do you remember about my projects?"><span class="nav-icon">▤</span><span><strong>MEMORY & NOTES</strong><small>Your knowledge</small></span><b>›</b></button>
+        <button class="nav-item" type="button" data-jump="#settingsPanel"><span class="nav-icon">☷</span><span><strong>SETTINGS</strong><small>Voice preferences</small></span><b>›</b></button>
+      </nav>
+
+    </aside>
+
+    <section class="hero panel-glow" aria-labelledby="heroTitle">
+      <div class="hero-art" role="img" aria-label="KYRA cyberpunk city and AI assistant artwork"><img src="{{ url_for('static', filename='images/kyra-hacker-hero.jpg') }}" alt="" loading="eager"></div>
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="hero-kicker"><span class="status-pulse"></span> WELCOME BACK,</p>
+        <h1 id="heroTitle">MIDHUN</h1>
+        <p class="hero-subtitle">I’M KYRA — YOUR AI CYBERSECURITY COMPANION.</p>
+        <div class="hero-badges"><span><i>◇</i> Local AI</span><span><i>ϟ</i> Automation</span><span><i>⬡</i> Safety-aware</span></div>
+      </div>
+      <button class="talk-button" type="button" data-jump="#voicePanel" aria-label="Open KYRA voice controls">
+        <span class="sound-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="talk-emblem" aria-hidden="true">ϟ</span>
+        <span class="talk-copy"><strong>TALK TO KYRA</strong><small>SPEAK · ASK · COMMAND</small></span>
+      </button>
+      <div class="hero-online-card panel">
+        <div class="core-orb" aria-hidden="true">ϟ</div>
+        <div class="online-card-copy"><strong>KYRA ONLINE</strong><small><i class="tiny-led"></i> All Systems Operational*</small><span><i>✓</i> AI Core <b id="aiModuleState" class="online-ai-state">CHECKING...</b></span><span><i>✓</i> Security Modules</span><span><i>✓</i> Voice Assistant</span><small class="hero-note">*Check the live status indicators.</small></div>
+      </div>
+      <span class="hero-corner hero-corner--tl">KYRA / COMMAND CENTER</span><span class="hero-corner hero-corner--br">LOCAL // READY</span>
+    </section>
+
+    <section class="profile-card panel" aria-label="User profile and dashboard search">
+      <div class="profile-emblem" aria-hidden="true">ϟ</div>
+      <div class="profile-copy"><strong>Midhun</strong><small class="profile-live"><i id="statusDot" class="status-dot status-dot--checking"></i><b id="statusText">CONNECTING...</b></small><small class="profile-detail" id="backendDetail">Checking local server</small></div>
+      <button class="profile-settings" type="button" data-jump="#settingsPanel" aria-label="Open settings">◎</button>
+      <form id="globalSearchForm" class="global-search" role="search">
+        <label class="sr-only" for="globalSearch">Search KYRA</label>
+        <span aria-hidden="true">⌕</span><input id="globalSearch" type="search" placeholder="Search KYRA... (Ctrl+K)" autocomplete="off"><kbd>↵</kbd>
+      </form>
+    </section>
+
+    <section class="system-activity panel" id="activityPanel" aria-label="System overview and recent activity">
+      <section class="system-panel" id="systemPanel">
+        <div class="panel-heading"><span class="panel-glyph">◇</span> SYSTEM OVERVIEW <span class="live-pill"><i></i> LIVE</span></div>
+        <div class="metrics-grid">
+          <div class="metric"><div class="metric-ring metric-ring--orange"><span>—<small>%</small></span></div><strong>CPU</strong></div>
+          <div class="metric"><div class="metric-ring metric-ring--cyan"><span>—<small>%</small></span></div><strong>RAM</strong></div>
+          <div class="metric"><div class="metric-ring metric-ring--amber"><span>—<small>%</small></span></div><strong>DISK</strong></div>
+          <div class="metric"><div class="metric-ring metric-ring--cyan"><span>—<small>%</small></span></div><strong>NETWORK</strong></div>
+        </div>
+        <div class="system-facts">
+          <div><span>BACKEND</span><strong id="backendState">Checking...</strong></div>
+          <div><span>LOCAL TIME</span><strong id="liveClock">--:--:--</strong></div>
+          <div><span>DATE</span><strong id="liveDate">Loading...</strong></div>
+          <div><span>AI MODEL</span><strong id="modelState">Checking...</strong></div>
+        </div>
+        <p class="panel-footnote">Hardware percentages display as unavailable until a live metrics provider is connected.</p>
+      </section>
+      <section class="activity-subpanel">
+        <div class="panel-heading"><span class="panel-glyph">⌁</span> RECENT ACTIVITY <span class="activity-caption">THIS SESSION</span></div>
+        <div id="recentActivity" class="activity-list"><div class="activity-empty"><span>⌁</span><p>Commands you run will appear here.</p></div></div>
+        <button type="button" class="text-action" data-jump="#consoleLog">↗ View command console</button>
+      </section>
+    </section>
+
+    <section class="middle-panels">
+      <section class="panel threat-intel-card" id="threatIntelPanel">
+        <div class="panel-heading"><span class="panel-glyph">⬡</span> THREAT INTELLIGENCE <span class="panel-tabs"><button type="button" data-jump="#systemPanel">Monitor</button><button type="button" data-jump="#threatAnalysisPanel">Analyze</button><button type="button" data-jump="#chatPanel">Assist</button></span></div>
+        <div class="intel-visual-row">
+          <div class="intel-stat-stack">
+            <div class="intel-stat"><span class="intel-symbol intel-symbol--orange">⛨</span><div><small>THREAT ANALYSIS</small><strong>READY</strong></div></div>
+            <div class="intel-stat"><span class="intel-symbol intel-symbol--amber">⚠</span><div><small>RISK ENGINE</small><strong>RULES-BASED</strong></div></div>
+            <div class="intel-stat"><span class="intel-symbol intel-symbol--cyan">✓</span><div><small>LOCAL AI</small><strong id="threatAIIndicator">OPTIONAL</strong></div></div>
+          </div>
+          <div class="intel-map" aria-label="Decorative digital network graphic"><svg viewBox="0 0 460 180" role="img" aria-label="Decorative network nodes, not a live threat map"><defs><radialGradient id="mapGlow"><stop offset="0" stop-color="#00dff5" stop-opacity=".42"/><stop offset="1" stop-color="#00dff5" stop-opacity="0"/></radialGradient></defs><ellipse cx="230" cy="90" rx="150" ry="72" fill="url(#mapGlow)"/><g fill="none" stroke="#00dff5" stroke-opacity=".28" stroke-width="1"><ellipse cx="230" cy="90" rx="150" ry="72"/><ellipse cx="230" cy="90" rx="106" ry="72"/><ellipse cx="230" cy="90" rx="55" ry="72"/><path d="M80 90h300M100 58h260M100 122h260M230 18v144"/></g><g fill="#ff6a1a"><circle cx="150" cy="65" r="4"/><circle cx="274" cy="49" r="3"/><circle cx="329" cy="108" r="4"/></g><g fill="#00e5ff"><circle cx="205" cy="118" r="4"/><circle cx="295" cy="81" r="3"/><circle cx="182" cy="85" r="3"/><circle cx="248" cy="139" r="3"/></g><g stroke="#ff8c35" stroke-opacity=".55"><path d="M150 65L205 118L274 49L329 108L248 139" fill="none"/><path d="M182 85L295 81" fill="none"/></g></svg><span class="map-label">NETWORK / VISUALIZATION</span><p>Use Analyze to assess supplied findings.</p></div>
+        </div>
+        <button type="button" class="panel-action" data-jump="#threatAnalysisPanel">↗ OPEN THREAT ANALYSIS</button>
+      </section>
+
+      <section class="panel assistant-panel" id="chatPanel" aria-label="KYRA AI assistant">
+        <div class="panel-heading"><span class="panel-glyph">ϟ</span> AI ASSISTANT — KYRA <span class="live-pill"><i></i> LOCAL</span></div>
+        <div id="consoleLog" class="console-log" role="log" aria-label="KYRA conversation" aria-live="polite" aria-relevant="additions">
+          <div class="message"><span>KYRA // SYSTEM</span><p>I’m here to help you secure, analyze and build a better tomorrow, Midhun. ⚡</p></div>
+        </div>
+        <div class="assistant-shortcuts">
+          <button type="button" data-prompt="Help me run a defensive security check step by step."><span>⛨</span><strong>Security Scan</strong><small>Discuss safe checks</small></button>
+          <button type="button" data-prompt="Help me analyze my code safely. Ask me for the file path first."><span>⌘</span><strong>Code Analysis</strong><small>Review a project file</small></button>
+          <button type="button" data-prompt="Search for recent AI and cybersecurity learning resources."><span>⌕</span><strong>Research</strong><small>Find learning resources</small></button>
+          <button type="button" data-prompt="Help me with my next programming task one step at a time."><span>✧</span><strong>General Help</strong><small>Anything you need</small></button>
+        </div>
+        <form id="commandForm" class="command-form">
+          <label class="sr-only" for="commandInput">Ask KYRA</label>
+          <input id="commandInput" type="text" placeholder="Ask KYRA a question or command..." autocomplete="off" required>
+          <button class="attach-btn" type="button" data-prompt="I want help investigating an error. Ask me to paste the traceback and give the project path." aria-label="Prepare error investigation prompt" title="Prepare an error investigation">⌁</button>
+          <button class="send-btn" type="submit" aria-label="Send command">↗</button>
+        </form>
+      </section>
+    </section>
+
+    <section class="panel quick-panel" aria-label="Quick tools">
+      <div class="panel-heading"><span class="panel-glyph">⌘</span> QUICK TOOLS</div>
+      <div class="quick-action-grid">
+        <button type="button" data-prompt="Help me open the Windows Terminal safely and explain the next step before I run commands."><span>▣</span><strong>Open Terminal</strong></button>
+        <button type="button" data-command="System info"><span>⛨</span><strong>Scan System</strong></button>
+        <button type="button" data-prompt="Help me analyze a project file safely. Ask me for the file path and tell me what I can share."><span>▤</span><strong>Analyze File</strong></button>
+        <button type="button" data-command="What do you remember about my projects?"><span>▣</span><strong>View Memory</strong></button>
+        <button type="button" data-prompt="Help me open a website or search the web. Ask me what I want to open."><span>⌁</span><strong>Browser Control</strong></button>
+        <button type="button" data-jump="#settingsPanel"><span>⚙</span><strong>Settings</strong></button>
+      </div>
+      <p class="quick-note">Protected actions may request confirmation.</p>
+    </section>
+
+    <section class="bottom-strip" aria-label="Dashboard widgets">
+      <section class="panel recent-files-card">
+        <div class="panel-heading"><span class="panel-glyph">▤</span> RECENT FILES</div>
+        <div class="empty-files"><span class="file-chip">PY</span><div><strong>Local file activity</strong><small>Connect a recent-files provider to display live files here.</small></div></div>
+        <button type="button" class="text-action" data-prompt="Help me review a project file safely. Ask me for its path and the relevant code or error.">↗ Review a project file</button>
+      </section>
+
+      <section class="panel core-card" id="kyraCorePanel">
+        <div class="core-emblem" aria-hidden="true"><span>ϟ</span><small>KYRA</small></div>
+        <div class="core-title"><span class="micro-label">LOCAL INTELLIGENCE ENGINE</span><h2>KYRA CORE</h2><p>LEARN · ADAPT · PROTECT</p></div>
+        <div class="core-status-list"><span><i class="status-pulse"></i> Core Active</span><span><i class="status-pulse"></i> <b id="aiModelName">Checking model availability</b></span><span><i class="status-pulse"></i> <b id="voiceEngineStatus">Checking</b></span></div>
+      </section>
+
+      <section class="panel goals-panel">
+        <div class="panel-heading"><span class="panel-glyph">⌁</span> DAILY GOALS <span class="goal-count">BROWSER SAVED</span></div>
+        <label class="goal-row"><input type="checkbox" data-goal="security-scan"><span>Complete security scan</span><small>Goal 01</small></label>
+        <label class="goal-row"><input type="checkbox" data-goal="analyze-files"><span>Analyze project files</span><small>Goal 02</small></label>
+        <label class="goal-row"><input type="checkbox" data-goal="learn-cyber"><span>Learn one cyber skill</span><small>Goal 03</small></label>
+        <label class="goal-row"><input type="checkbox" data-goal="improve-demo"><span>Improve the demo</span><small>Goal 04</small></label>
+      </section>
+
+      <section class="panel focus-card">
+        <div class="panel-heading"><span class="panel-glyph">✦</span> TODAY’S FOCUS</div>
+        <p>“DISCIPLINE<br>BUILDS<br>FREEDOM.”</p><small>— KYRA</small>
+      </section>
+    </section>
+
+    <section class="panel voice-deck" id="voicePanel" aria-label="KYRA voice assistant">
+      <div class="panel-heading"><span class="panel-glyph">♫</span> VOICE INTERFACE <span id="voiceModuleState" class="module-state">READY</span></div>
+      <div class="voice-main-row">
+        <button type="button" id="micButton" class="mic-button" aria-pressed="false" aria-label="Start KYRA voice assistant"><span class="mic-orb" aria-hidden="true">♫</span><span class="mic-orb-label" id="micButtonText">TAP TO SPEAK</span></button>
+        <div id="voiceStatus" class="voice-status" aria-live="polite">I’m listening when you’re ready ✧</div>
+        <div class="voice-controls"><button type="button" id="voiceToggle" class="small-control" aria-pressed="true">🔊 Replies on</button><button type="button" id="voiceTest" class="small-control">Test voice</button></div>
+      </div>
+      <details class="voice-settings" id="settingsPanel">
+        <summary>Voice & language settings</summary>
+        <div class="voice-settings-grid"><label for="replyLanguage">Reply language<select id="replyLanguage"><option value="en">English</option><option value="hi">हिंदी (Hindi)</option><option value="te">తెలుగు (Telugu)</option></select></label><label for="voiceSelect">Voice profile<select id="voiceSelect"><option value="auto">Automatic voice</option></select></label></div>
+        <p id="voiceAvailability" class="voice-availability">Checking installed voices...</p>
+      </details>
+    </section>
+
+    <!-- User-supplied findings only: this feature does not perform a live device scan. -->
+    <section class="panel threat-analysis-panel" id="threatAnalysisPanel" aria-labelledby="threatAnalysisTitle">
+      <div class="panel-heading"><span class="panel-glyph">⬡</span> THREAT ANALYSIS <span class="live-pill"><i></i> LOCAL ENGINE</span></div>
+      <div class="threat-analysis-layout">
+        <div class="threat-analysis-intro-block"><h2 class="threat-analysis-title" id="threatAnalysisTitle">SECURITY <span>ASSESSMENT</span></h2><p class="threat-analysis-intro">Analyze a supplied finding with KYRA’s deterministic risk engine. This form does not scan your laptop or inspect live processes.</p><div class="analysis-guide"><span>01</span><p>Provide a title, severity, confidence and evidence.</p><span>02</span><p>Choose whether to include local AI in the explanation.</p><span>03</span><p>Review the score and verify the evidence before acting.</p></div></div>
+        <div class="threat-analysis-form-area">
+          <form id="threatAnalysisForm" class="threat-analysis-form">
+            <label for="threatTitle">FINDING TITLE</label><input id="threatTitle" name="title" type="text" maxlength="300" required placeholder="Repeated failed login attempts">
+            <label for="threatSeverity">SEVERITY</label><select id="threatSeverity" name="severity"><option value="info">Info</option><option value="low">Low</option><option value="medium">Medium</option><option value="high" selected>High</option><option value="critical">Critical</option></select>
+            <label for="threatConfidence">CONFIDENCE (0–1)</label><input id="threatConfidence" name="confidence" type="number" min="0" max="1" step="0.1" value="1" required>
+            <label for="threatEvidence">EVIDENCE</label><textarea id="threatEvidence" name="evidence" maxlength="3000" rows="3" required placeholder="Describe the evidence supporting this finding."></textarea>
+            <label for="threatRecommendations">RECOMMENDATIONS <small>(one per line)</small></label><textarea id="threatRecommendations" name="recommendations" maxlength="3000" rows="2" placeholder="Review authentication logs&#10;Enable multi-factor authentication"></textarea>
+            <label class="threat-analysis-ai-option" for="threatUseAI"><input id="threatUseAI" type="checkbox"><span>Use local AI for explanation <small>(may take longer)</small></span></label>
+            <button id="threatAnalyzeButton" class="panel-action threat-analysis-submit" type="submit">↗ ANALYZE FINDING</button>
+          </form>
+          <p id="threatAnalysisStatus" class="threat-analysis-status" role="status" aria-live="polite">Enter a finding to begin.</p>
+          <div id="threatAnalysisResults" class="threat-analysis-results" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="page-footer"><span>KYRA AI <b>LOCAL</b></span><span>YOUR IDEAS <b>×</b> MY INTELLIGENCE <b>=</b> REAL RESULTS</span><span>SAFETY-FIRST // CYBERPUNK COMMAND CENTER</span></footer>
+  </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/dashboard-ui.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/threat-analysis.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/reference-dashboard.js') }}" defer></script>
 </body>
 </html>

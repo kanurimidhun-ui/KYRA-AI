@@ -1,40 +1,90 @@
 
+import re
 import webbrowser
 from urllib.parse import quote_plus
 
 
+SEARCH_ENGINES = {
+    "google": "https://www.google.com/search?q=",
+    "youtube": "https://www.youtube.com/results?search_query=",
+    "bing": "https://www.bing.com/search?q=",
+    "duckduckgo": "https://duckduckgo.com/?q=",
+}
+
+
 def handle_search_command(command):
-    """Search Google using approved command patterns."""
+    """Recognize natural-language web search commands."""
 
     if not isinstance(command, str):
         return None
 
     command = command.strip()
 
-    # Remove optional KYRA wake word
-    for wake_word in ("kyra", "कायरा", "కైరా"):
-        if command.lower().startswith(wake_word):
-            command = command[len(wake_word):]
-            command = command.lstrip(" ,:!?।")
+    # Remove optional KYRA wake word.
+    command = re.sub(
+        r"^(?:kyra|कायरा|కైరా)[\s,!:]+",
+        "",
+        command,
+        flags=re.IGNORECASE,
+    ).strip()
 
-    lower_command = command.lower()
+    command = command.rstrip(" ?.!।").strip()
 
-    # English command
-    if lower_command.startswith("search google for "):
-        query = command[len("search google for "):]
+    patterns = [
+        # search google for Python tutorials
+        r"^search\s+(google|youtube|bing|duckduckgo)\s+for\s+(.+)$",
 
-    # Hindi command
-    elif command.startswith("गूगल पर ") and command.endswith(" खोजो"):
-        query = command[len("गूगल पर "):-len(" खोजो")]
+        # search Python tutorials on Google
+        r"^search\s+(.+?)\s+on\s+(google|youtube|bing|duckduckgo)$",
 
-    # Telugu command
-    elif command.startswith("గూగుల్‌లో ") and command.endswith(" వెతుకు"):
-        query = command[len("గూగుల్‌లో "):-len(" వెతుకు")]
+        # search for Python tutorials
+        r"^search\s+for\s+(.+)$",
 
-    else:
+        # google Python tutorials
+        r"^(google|youtube|bing|duckduckgo)\s+(.+)$",
+
+        # Hindi
+        r"^गूगल पर\s+(.+?)\s+खोजो$",
+
+        # Telugu
+        r"^గూగుల్‌లో\s+(.+?)\s+వెతుకు$",
+    ]
+
+    engine = "google"
+    query = None
+
+    for index, pattern in enumerate(patterns):
+        match = re.fullmatch(
+            pattern,
+            command,
+            flags=re.IGNORECASE,
+        )
+
+        if not match:
+            continue
+
+        if index == 0:
+            engine, query = match.groups()
+
+        elif index == 1:
+            query, engine = match.groups()
+
+        elif index == 2:
+            query = match.group(1)
+
+        elif index == 3:
+            engine, query = match.groups()
+
+        else:
+            query = match.group(1)
+
+        break
+
+    if query is None:
         return None
 
-    query = query.strip().rstrip("?.!।").strip()
+    engine = engine.lower()
+    query = query.strip()
 
     if not query:
         return "ERROR: Search topic is empty."
@@ -42,31 +92,35 @@ def handle_search_command(command):
     if len(query) > 200:
         return "ERROR: Search topic is too long."
 
-    search_url = (
-        "https://www.google.com/search?q="
-        + quote_plus(query)
-    )
+    search_url = SEARCH_ENGINES[engine] + quote_plus(query)
 
     try:
         opened = webbrowser.open(search_url)
 
         if opened:
-            return f"SUCCESS: Searching Google for {query}."
+            return (
+                f"SUCCESS: Searching {engine.title()} "
+                f"for {query}."
+            )
 
         return "ERROR: Could not open the browser."
 
-    except Exception:
-        return "ERROR: Google search could not start."
+    except Exception as error:
+        return f"ERROR: Web search failed: {error}"
 
 
 if __name__ == "__main__":
-    print("=== KYRA GOOGLE SEARCH TEST ===")
+    print("=== KYRA AI v3.0 WEB SEARCH ===")
 
-    command = input("Enter search command: ")
+    while True:
+        command = input("Enter search command (or EXIT): ").strip()
 
-    result = handle_search_command(command)
+        if command.lower() == "exit":
+            break
 
-    if result is None:
-        print("Command not recognized.")
-    else:
-        print(result)
+        result = handle_search_command(command)
+
+        if result is None:
+            print("Command not recognized.")
+        else:
+            print(result)

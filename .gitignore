@@ -24,3 +24,72 @@ KYRA_BACKUP*/
 
 # KYRA backup archives
 KYRA-Phase*-Backup.zip
+
+kyra_memory.json
+kyra_memory.json.tmp
+
+kyra_personal_memory.json
+kyra_personal_memory.json.tmp
+
+
+# Local databases and personal memory
+*.db
+*.sqlite
+*.sqlite3
+kyra_memory.json
+kyra_memory.json.tmp
+kyra_personal_memory.json
+kyra_personal_memory.json.tmp
+
+# Audit logs and local records
+kyra_audit.jsonl
+*.log
+
+# Backup files and folders
+backups/
+backup_ui_before_neon_*/
+app.backup.py
+app_backup*.py
+app_before_*.py
+app_*_backup*.py
+automation_before_*.py
+automation_*_backup*.py
+search_automation_before_*.py
+kyra_before_*.py
+kyra_*_backup*.py
+kyra_*_success*.py
+kyra_*_working*.py
+kyra_speaker_backup.py
+kyra_speaker_before_*.py
+kyra_voice_to_voice_v3_backup.py
+kyra_voice_working_backup.py
+static/js/*_backup*.js
+templates/*_backup*.html
+README.md 1*
+installed_apps.txt
+
+# Generated audio and model cache
+*.mp3
+whisper_tiny/
+
+# Python backups and development scripts
+app_*before*.py
+app_*backup*.py
+app_day*_*.py
+day8_upgrade.py
+day9_integrate.py
+day9_planner*.py
+!day9_planner.py
+*_before_*.py
+*_backup*.py
+*_success_backup*.py
+
+# Local audit data and databases
+kyra_audit.jsonl
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated voice files and local models
+*.mp3
+whisper_tiny/
